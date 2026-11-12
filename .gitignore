@@ -1,2 +1,23 @@
+# ---- macOS ----
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.AppleDouble
+.AppleDB
+.AppleDesktop
+.LSOverride
+Icon?
+.DocumentRevisions-V100
+.TemporaryItems
+.VolumeIcon.icns
+.apdisk
+Network Trash Folder
+Temporary Items
+
+# ---- Rust / Cargo ----
 /target
+**/*.rs.bk
+*.pdb
