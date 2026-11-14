@@ -15,21 +15,22 @@ This repo is not a reimplementation of the book. It's a scratchpad where each ch
 │   ├── lib.rs              # module tree root
 │   └── foundation/         # Chapter 1
 │       ├── mod.rs
-│       ├── boiler.rs       # scratch file: one fn + one unit test
-│       └── memory/         # "Talking About Memory"
+│       ├── memory/         # "Talking About Memory"
+│       │   ├── mod.rs
+│       │   ├── terminology.rs   # values, places, variables, pointers
+│       │   ├── variables.rs     # high-level (flows) vs low-level (slots) models
+│       │   └── regions.rs       # stack, heap, static memory
+│       └── ownership/      # "Ownership"
 │           ├── mod.rs
-│           ├── terminology.rs   # values, places, variables, pointers
-│           ├── variables.rs     # high-level (flows) vs low-level (slots) models
-│           └── regions.rs       # stack, heap, static memory
+│           ├── move_and_copy.rs # Listing 1-3, Copy vs move
+│           └── dropping.rs      # recursive drop, drop order
 ├── book/
 │   ├── Rust_for_Rustaceans.md    # local copy of the book text (for reference/grepping)
 │   └── Rust_for_Rustaceans.pdf
 └── target/                 # build artifacts (gitignored)
 ```
 
-`src/foundation/boiler.rs` is the template shape every new exercise follows: a small function plus a `#[cfg(test)]` module asserting on it. Use it as the starting point for new files.
-
-Sections of the book become subdirectories, one file per subsection, with the module docs quoting the book and every claim backed by a test. Illegal programs (the ones the borrow checker rejects) are written as `compile_fail` doctests, so `cargo test` verifies that `rustc` still rejects them with the expected error code.
+Sections of the book become subdirectories, one file per subsection, with the module docs quoting the book and every claim backed by a test. A demo function is a small function plus a `#[cfg(test)]` module that calls it. Illegal programs (the ones the compiler rejects) are written as `compile_fail` doctests, so `cargo test` verifies that `rustc` still rejects them with the expected error code — `E0382` for use after move, `E0184` for `Copy` plus `Drop`, and so on.
 
 ## Prerequisites
 
@@ -51,7 +52,7 @@ rustc --version
 cargo check            # fast type-check of the whole crate
 cargo test             # run every exercise's unit tests
 cargo test running_print          # run a single test by name
-cargo test chapter_1::            # run everything under one chapter module
+cargo test foundation::           # run everything under one chapter module
 cargo run              # no-op: this is a library crate, there is no main()
 cargo clippy --all-targets        # lints (if clippy is installed)
 cargo doc --open       # browse generated docs for the crate
@@ -62,21 +63,21 @@ cargo doc --open       # browse generated docs for the crate
 1. Create the module directory and file:
 
    ```sh
-   mkdir -p src/chapter_2
-   cp src/chapter_1/boiler.rs src/chapter_2/basics.rs
+   mkdir -p src/types
+   cp src/foundation/ownership/move_and_copy.rs src/types/layout.rs
    ```
 
 2. Wire it up:
 
    ```rust
-   // src/chapter_2/mod.rs
-   mod basics;
+   // src/types/mod.rs
+   pub mod layout;
    ```
 
    ```rust
    // src/lib.rs
-   mod chapter_1;
-   mod chapter_2;
+   pub mod foundation;
+   pub mod types;
    ```
 
 3. Rename the copied function and test in `basics.rs` away from `addition` / `running_print`, then `cargo test`.
@@ -92,7 +93,7 @@ Conventions used here:
 
 | # | Chapter | Module | Status |
 | --- | --- | --- | --- |
-| 1 | Foundations | `src/foundation/` | ⏳ *Talking About Memory* ✅ · rest in progress |
+| 1 | Foundations | `src/foundation/` | ⏳ *Talking About Memory* ✅ · *Ownership* ✅ |
 | 2 | Types | — | not started |
 | 3 | Designing Interfaces | — | not started |
 | 4 | Error Handling | — | not started |

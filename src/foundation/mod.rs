@@ -7,5 +7,8 @@
 //!
 //! * [`memory`] — *Talking About Memory*: terminology, the two models of a
 //!   variable, and the stack / heap / static regions.
+//! * [`ownership`] — *Ownership*: move and copy semantics, dropping, and drop
+//!   order.
 
 pub mod memory;
+pub mod ownership;
