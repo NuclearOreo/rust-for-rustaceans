@@ -20,10 +20,18 @@ This repo is not a reimplementation of the book. It's a scratchpad where each ch
 │       │   ├── terminology.rs   # values, places, variables, pointers
 │       │   ├── variables.rs     # high-level (flows) vs low-level (slots) models
 │       │   └── regions.rs       # stack, heap, static memory
-│       └── ownership/      # "Ownership"
+│       ├── ownership/      # "Ownership"
+│       │   ├── mod.rs
+│       │   ├── move_and_copy.rs # Listing 1-3, Copy vs move
+│       │   └── dropping.rs      # recursive drop, drop order
+│       └── borrowing/      # "Borrowing and Lifetimes"
 │           ├── mod.rs
-│           ├── move_and_copy.rs # Listing 1-3, Copy vs move
-│           └── dropping.rs      # recursive drop, drop order
+│           ├── shared.rs        # &T: shared, Copy, immutable
+│           ├── mutable.rs       # &mut T: exclusive, must leave a value
+│           ├── interior_mutability.rs   # mutating through a &
+│           ├── lifetimes.rs     # the borrow checker; lifetimes as regions
+│           ├── generic_lifetimes.rs     # references inside your own types
+│           └── variance.rs      # covariant / invariant / contravariant
 ├── book/
 │   ├── Rust_for_Rustaceans.md    # local copy of the book text (for reference/grepping)
 │   └── Rust_for_Rustaceans.pdf
@@ -99,7 +107,7 @@ Conventions used here:
 
 | # | Chapter | Directory | Status |
 | --- | --- | --- | --- |
-| 1 | Foundations | `src/foundation/` | ⏳ *Talking About Memory* ✅ · *Ownership* ✅ |
+| 1 | Foundations | `src/foundation/` | ✅ *Talking About Memory* · *Ownership* · *Borrowing and Lifetimes* |
 | 2 | Types | `src/types/` | not started |
 | 3 | Designing Interfaces | `src/designing_interfaces/` | not started |
 | 4 | Error Handling | `src/error_handling/` | not started |
