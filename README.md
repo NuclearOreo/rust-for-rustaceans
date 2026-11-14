@@ -125,6 +125,8 @@ Directories are listed as they will be named when created; only `foundation/` ex
 
 ## Notes
 
+- `.pi/skills/rust-for-rustaceans-nav/SKILL.md` is a Pi agent skill that re-orients a fresh session in this repo: layout, conventions, verification loop, and the traps that have already caused silent failures. Load it with `/skill:rust-for-rustaceans-nav` (or restart Pi so its description is advertised).
+
 - `book/` is committed so the reference text is available offline and greppable, e.g. `grep -n "Lifetime Variance" book/Rust_for_Rustaceans.md`. It's the author's copyrighted work — for personal study only, no redistribution.
 - Chapters are largely independent. *Foundations* and *Types* underpin everything else, so resist skipping them even if they feel familiar.
 - *Asynchronous Programming*, *Unsafe Code*, and *Rust Without the Standard Library* will eventually want extra dependencies (`tokio`, `miri`, `cross`). Add them to `Cargo.toml` when you get there rather than now.
