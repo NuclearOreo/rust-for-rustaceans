@@ -32,5 +32,6 @@
 //! make are opt-in, and each `repr` attribute trades a promise for something
 //! else (C interoperability, density, alignment, or a newtype's identity).
 
+pub mod existential_types;
 pub mod traits_and_trait_bounds;
 pub mod types_in_memory;

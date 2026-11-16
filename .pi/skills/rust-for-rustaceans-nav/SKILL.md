@@ -31,8 +31,8 @@ book and state which listings are demonstrated.
 
 ```text
 src/foundation/     Ch. 1 Foundations        ✅ complete
-src/types/          Ch. 2 Types              ← next
-src/designing_interfaces/   Ch. 3
+src/types/          Ch. 2 Types              ✅ complete
+src/designing_interfaces/   Ch. 3  ← next
 src/error_handling/         Ch. 4
 src/project_structure/      Ch. 5
 src/testing/                Ch. 6
@@ -58,11 +58,13 @@ several distinct topics gets several files — `foundation/borrowing/` has six.
   dynamically_sized_types
 - `types/traits_and_trait_bounds/` — compilation_and_dispatch, generic_traits,
   coherence_and_the_orphan_rule, trait_bounds, marker_traits
+- `types/existential_types/` — inference_and_naming,
+  return_position_impl_trait, argument_position_impl_trait,
+  associated_type_position
 
-Chapter 1 is complete. Chapter 2's *Types in Memory* and *Traits and Trait
-Bounds* are complete. **Next is Chapter 2, *Existential Types*** →
-`types/existential_types/` (a short section: `impl Trait` in return position,
-`async` in traits, `-> impl Trait` vs named associated types).
+Chapters 1 and 2 are complete. **Next is Chapter 3, *Designing Interfaces*** →
+create `src/designing_interfaces/` (sections: *Unsurprising*, *Flexible*,
+*Obvious*, *Constrained*).
 
 The shape is uniform: `src/<chapter>/<section>/<topic>.rs`. `src/types/` is the
 chapter, and each `####` section of the book (`Types in Memory`, `Traits and
@@ -151,7 +153,9 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
    a move with a write-through, `needless_late_init` reordering the drop demo),
    put `#[allow(clippy::the_lint)]` directly above the fn with a `//` comment
    explaining why. Existing precedents: `replace_box`, `needless_late_init`,
-   `ptr_arg`, `let_and_return`.
+   `ptr_arg`, `let_and_return`, `manual_async_fn` (an `impl Future` return that
+   exists to sit beside its `async fn` twin), `vec_init_then_push` (`Vec::new()`
+   then `push` *is* the inference demo).
 5. **`let mut slot = T::new(); slot = other;`** triggers `unused_assignments`
    because the first value is never read — and it also proves nothing. Read the
    old value first, then show the drop (see
@@ -172,13 +176,15 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
    wide pointer carries a length or a vtable, use `size_of_val`, which reads the
    metadata for you — and never `size_of_val(&handle)` on a `&dyn T`, which is a
    `&&dyn T` (`clippy::size_of_ref`) measuring the handle instead of the value.
-8. **Not every rejection has an error code.** Calling a `where Self: Sized`
-   method through a trait object is refused with a bare `error:` and no `E…`
-   ("the `make` method cannot be invoked on a trait object"), so it cannot be a
+8. **Not every rejection has an error code.** Two seen so far: calling a
+   `where Self: Sized` method through a trait object ("the `make` method cannot
+   be invoked on a trait object"), and a future that is not `Send` because a
+   non-`Send` value is held across an `.await` ("future cannot be sent between
+   threads safely" — an async-specific diagnostic with no `E…`). Neither can be a
    `compile_fail,E….` doctest under rule 4. Demonstrate the *positive* half — the
-   trait is still object-safe, so `&dyn Trait` compiles and its other methods
-   work — and describe the rejection in prose. Always confirm a code with
-   `rustc` before writing it into a doctest.
+   trait is still object-safe, the owned future *is* `Send` — and describe the
+   rejection in prose, in a ```text block so nobody mistakes it for a test.
+   Always confirm a code with `rustc` before writing it into a doctest.
 9. **Orphan-rule demos need a crate boundary, and a doctest provides one.** A
    doctest is compiled as its own crate with this one as a dependency, so items
    from `rust_for_rustaceans` are *foreign* there. That is the only way to test
@@ -192,14 +198,24 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 10. **`&str` is not an `Iterator`.** A `flatten`-style demo over `Vec<&str>`
     fails with `E0277`; use `Vec<[char; N]>` or `Vec<Vec<T>>` for the inner
     collection.
+11. **Some of the book's advice is ahead of stable Rust — check before
+    documenting it as working.** The `IntoIterator` recipe in *Existential
+    Types* (`type IntoIter = impl Iterator<Item = Self::Item>;`) is
+    `type_alias_impl_trait`, rejected as `E0658` even on rustc 1.100. Record it
+    as a rejection, then show what stable has: a named helper type (zero cost,
+    but exported), `Box<dyn Iterator>` (erased, one allocation), or `impl Trait`
+    on an *inherent* method (stable, and no type escapes) — everything except
+    the associated-type position.
 
 ## Error codes already in use
 
 | Code | Used for |
 | --- | --- |
 | `E0038` | trait is not dyn compatible: `dyn Clone`, generic method, static method, `dyn Extend<T>` |
+| `E0107` | turbofish on an argument-position `impl Trait` (takes 0 type arguments) |
 | `E0117` | foreign trait for a foreign concrete type (`impl Debug for bool`) |
 | `E0119` | conflicting implementations (two `impl ConvertInto for D`, `impl<T> From<T> for MyType`) |
+| `E0121` | `_` in an item signature (`fn make() -> _`, naming an `async fn`'s future) |
 | `E0184` | `Copy` + `Drop` on one type |
 | `E0204` | `derive(Copy)` with a non-`Copy` field |
 | `E0210` | orphan rule: an uncovered type parameter (`impl<T> From<T> for Vec<T>`) |
@@ -218,6 +234,7 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | `E0597` | "does not live long enough"; also a missing `for<'a>` bound |
 | `E0599` | no method on this type (typestate: `run` on `SshConnection<Unauthenticated>`) |
 | `E0605` | cast `&T` as `&mut T` |
+| `E0658` | unstable feature: `type IntoIter = impl Iterator<…>` (`type_alias_impl_trait`) |
 | `E0690` | `repr(transparent)` on a struct with two non-trivial fields |
 | `E0793` | reference to a field of a `repr(packed)` struct |
 
