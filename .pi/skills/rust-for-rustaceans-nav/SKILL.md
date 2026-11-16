@@ -54,8 +54,16 @@ several distinct topics gets several files — `foundation/borrowing/` has six.
 - `foundation/ownership/` — move_and_copy, dropping
 - `foundation/borrowing/` — shared, mutable, interior_mutability, lifetimes,
   generic_lifetimes, variance
+- `types/types_in_memory/` — alignment, layout, complex_types,
+  dynamically_sized_types
 
-Chapter 1 is complete. **Next is Chapter 2, *Types*** → create `src/types/`.
+Chapter 1 is complete. Chapter 2's first section, *Types in Memory*, is complete.
+**Next is Chapter 2, *Traits and Trait Bounds*** → `types/traits_and_trait_bounds/`.
+
+The shape is uniform: `src/<chapter>/<section>/<topic>.rs`. `src/types/` is the
+chapter, and each `####` section of the book (`Types in Memory`, `Traits and
+Trait Bounds`, `Existential Types`) is a directory under it — the same way
+`foundation/` holds `memory/`, `ownership/` and `borrowing/`.
 
 ## Anatomy of a section module
 
@@ -145,6 +153,21 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
    old value first, then show the drop (see
    `borrowing::mutable::overwriting_drops_the_old_value_immediately`, which
    observes it with `Arc::strong_count`).
+6. **Layout demos: the "same" struct is not the same struct.**
+   - A plain struct is `repr(Rust)` and reorders fields, so
+     `struct Bar { a: u8, b: u32 }` really is 8 bytes but has `b` at offset 0.
+     Want declarable padding? Say `#[repr(C)]`.
+   - `offset_of!` is `E0793` on a `#[repr(packed)]` field (it takes a reference
+     internally), so packed types can only be asserted on size and alignment.
+   - `println!("{}", packed.field)` is *also* `E0793`, because format arguments
+     are taken by reference. Copy the field into a local first.
+   - Clippy's `repr_packed_without_abi` wants `#[repr(C, packed)]`; that keeps
+     the zero padding and alignment of 1, so qualify it and note the difference
+     instead of reaching for `#[allow]`.
+7. **`std::ptr::metadata` is unstable** (`ptr_metadata`, `E0658`). To show that a
+   wide pointer carries a length or a vtable, use `size_of_val`, which reads the
+   metadata for you — and never `size_of_val(&handle)` on a `&dyn T`, which is a
+   `&&dyn T` (`clippy::size_of_ref`) measuring the handle instead of the value.
 
 ## Error codes already in use
 
@@ -152,7 +175,7 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | --- | --- |
 | `E0184` | `Copy` + `Drop` on one type |
 | `E0204` | `derive(Copy)` with a non-`Copy` field |
-| `E0277` | missing trait bound (`assert_copy::<String>()`) |
+| `E0277` | missing trait bound (`assert_copy::<String>()`); also a `Sized` requirement (`size_of::<[u8]>()`, a non-last unsized field, `*boxed_slice`) |
 | `E0308` | mismatched types (variance direction, fn-pointer coercion) |
 | `E0381` | use/borrow of a possibly-uninitialized binding |
 | `E0382` | use of moved value |
@@ -164,6 +187,8 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | `E0594` | write through a `&` |
 | `E0597` | "does not live long enough" |
 | `E0605` | cast `&T` as `&mut T` |
+| `E0690` | `repr(transparent)` on a struct with two non-trivial fields |
+| `E0793` | reference to a field of a `repr(packed)` struct |
 
 Verify a new code with a throwaway file before trusting it:
 

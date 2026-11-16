@@ -13,7 +13,7 @@ This repo is not a reimplementation of the book. It's a scratchpad where each ch
 ├── Cargo.toml              # library crate, edition 2024, no dependencies
 ├── src/
 │   ├── lib.rs              # module tree root
-│   └── foundation/         # Ch. 1 — Foundations
+│   ├── foundation/         # Ch. 1 — Foundations
 │       ├── mod.rs
 │       ├── memory/         # "Talking About Memory"
 │       │   ├── mod.rs
@@ -32,6 +32,14 @@ This repo is not a reimplementation of the book. It's a scratchpad where each ch
 │           ├── lifetimes.rs     # the borrow checker; lifetimes as regions
 │           ├── generic_lifetimes.rs     # references inside your own types
 │           └── variance.rs      # covariant / invariant / contravariant
+│   └── types/              # Ch. 2 — Types
+│       ├── mod.rs
+│       └── types_in_memory/     # "Types in Memory"
+│           ├── mod.rs
+│           ├── alignment.rs     # natural alignment, byte boundaries, misaligned reads
+│           ├── layout.rs        # Listing 2-1; repr(C)/repr(Rust)/packed/align/transparent
+│           ├── complex_types.rs # tuple, array, union, enum + discriminant
+│           └── dynamically_sized_types.rs  # Sized, ?Sized, wide pointers
 ├── book/
 │   ├── Rust_for_Rustaceans.md    # local copy of the book text (for reference/grepping)
 │   └── Rust_for_Rustaceans.pdf
@@ -108,7 +116,7 @@ Conventions used here:
 | # | Chapter | Directory | Status |
 | --- | --- | --- | --- |
 | 1 | Foundations | `src/foundation/` | ✅ *Talking About Memory* · *Ownership* · *Borrowing and Lifetimes* |
-| 2 | Types | `src/types/` | not started |
+| 2 | Types | `src/types/` | ⏳ *Types in Memory* ✅ · *Traits and Trait Bounds* · *Existential Types* |
 | 3 | Designing Interfaces | `src/designing_interfaces/` | not started |
 | 4 | Error Handling | `src/error_handling/` | not started |
 | 5 | Project Structure | `src/project_structure/` | not started |
@@ -121,7 +129,7 @@ Conventions used here:
 | 12 | Rust Without the Standard Library | `src/rust_without_the_standard_library/` | not started |
 | 13 | The Rust Ecosystem | `src/rust_ecosystem/` | not started |
 
-Directories are listed as they will be named when created; only `foundation/` exists so far. Update the status column as you go: ⏳ in progress, ✅ done, ⏭️ skipped.
+Directories are listed as they will be named when created; `foundation/` and `types/` exist so far. Update the status column as you go: ⏳ in progress, ✅ done, ⏭️ skipped.
 
 ## Notes
 

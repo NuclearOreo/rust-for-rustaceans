@@ -4,3 +4,4 @@
 //! public so that their `compile_fail` doctests are collected by `cargo test`.
 
 pub mod foundation;
+pub mod types;
