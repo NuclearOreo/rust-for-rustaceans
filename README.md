@@ -34,12 +34,19 @@ This repo is not a reimplementation of the book. It's a scratchpad where each ch
 │           └── variance.rs      # covariant / invariant / contravariant
 │   └── types/              # Ch. 2 — Types
 │       ├── mod.rs
-│       └── types_in_memory/     # "Types in Memory"
+│       ├── types_in_memory/     # "Types in Memory"
+│       │   ├── mod.rs
+│       │   ├── alignment.rs     # natural alignment, byte boundaries, misaligned reads
+│       │   ├── layout.rs        # Listing 2-1; repr(C)/repr(Rust)/packed/align/transparent
+│       │   ├── complex_types.rs # tuple, array, union, enum + discriminant
+│       │   └── dynamically_sized_types.rs  # Sized, ?Sized, wide pointers
+│       └── traits_and_trait_bounds/  # "Traits and Trait Bounds"
 │           ├── mod.rs
-│           ├── alignment.rs     # natural alignment, byte boundaries, misaligned reads
-│           ├── layout.rs        # Listing 2-1; repr(C)/repr(Rust)/packed/align/transparent
-│           ├── complex_types.rs # tuple, array, union, enum + discriminant
-│           └── dynamically_sized_types.rs  # Sized, ?Sized, wide pointers
+│           ├── compilation_and_dispatch.rs  # Listings 2-2/2-3; monomorphization, vtables
+│           ├── generic_traits.rs           # trait Foo<T> vs trait Foo { type Bar; }
+│           ├── coherence_and_the_orphan_rule.rs  # Listings 2-4/2-5
+│           ├── trait_bounds.rs             # where clauses, derive, HRTBs, Listing 2-6
+│           └── marker_traits.rs            # Send/Sync, auto traits, typestates
 ├── book/
 │   ├── Rust_for_Rustaceans.md    # local copy of the book text (for reference/grepping)
 │   └── Rust_for_Rustaceans.pdf
@@ -116,7 +123,7 @@ Conventions used here:
 | # | Chapter | Directory | Status |
 | --- | --- | --- | --- |
 | 1 | Foundations | `src/foundation/` | ✅ *Talking About Memory* · *Ownership* · *Borrowing and Lifetimes* |
-| 2 | Types | `src/types/` | ⏳ *Types in Memory* ✅ · *Traits and Trait Bounds* · *Existential Types* |
+| 2 | Types | `src/types/` | ⏳ *Types in Memory* ✅ · *Traits and Trait Bounds* ✅ · *Existential Types* |
 | 3 | Designing Interfaces | `src/designing_interfaces/` | not started |
 | 4 | Error Handling | `src/error_handling/` | not started |
 | 5 | Project Structure | `src/project_structure/` | not started |

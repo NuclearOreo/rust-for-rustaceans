@@ -56,9 +56,13 @@ several distinct topics gets several files — `foundation/borrowing/` has six.
   generic_lifetimes, variance
 - `types/types_in_memory/` — alignment, layout, complex_types,
   dynamically_sized_types
+- `types/traits_and_trait_bounds/` — compilation_and_dispatch, generic_traits,
+  coherence_and_the_orphan_rule, trait_bounds, marker_traits
 
-Chapter 1 is complete. Chapter 2's first section, *Types in Memory*, is complete.
-**Next is Chapter 2, *Traits and Trait Bounds*** → `types/traits_and_trait_bounds/`.
+Chapter 1 is complete. Chapter 2's *Types in Memory* and *Traits and Trait
+Bounds* are complete. **Next is Chapter 2, *Existential Types*** →
+`types/existential_types/` (a short section: `impl Trait` in return position,
+`async` in traits, `-> impl Trait` vs named associated types).
 
 The shape is uniform: `src/<chapter>/<section>/<topic>.rs`. `src/types/` is the
 chapter, and each `####` section of the book (`Types in Memory`, `Traits and
@@ -168,13 +172,39 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
    wide pointer carries a length or a vtable, use `size_of_val`, which reads the
    metadata for you — and never `size_of_val(&handle)` on a `&dyn T`, which is a
    `&&dyn T` (`clippy::size_of_ref`) measuring the handle instead of the value.
+8. **Not every rejection has an error code.** Calling a `where Self: Sized`
+   method through a trait object is refused with a bare `error:` and no `E…`
+   ("the `make` method cannot be invoked on a trait object"), so it cannot be a
+   `compile_fail,E….` doctest under rule 4. Demonstrate the *positive* half — the
+   trait is still object-safe, so `&dyn Trait` compiles and its other methods
+   work — and describe the rejection in prose. Always confirm a code with
+   `rustc` before writing it into a doctest.
+9. **Orphan-rule demos need a crate boundary, and a doctest provides one.** A
+   doctest is compiled as its own crate with this one as a dependency, so items
+   from `rust_for_rustaceans` are *foreign* there. That is the only way to test
+   `E0117`/`E0210` from inside the crate: put a `pub` trait (e.g.
+   `coherence_and_the_orphan_rule::ForeignTrait`) in the library, `use` it from
+   the doctest, and the rejection is real. Two wrinkles found this way:
+   `impl<T> From<T> for MyType` is orphan-legal but overlaps the std reflexive
+   `impl<T> From<T> for T` (`E0119`, not `E0210`); and `#[derive(Clone)]` on
+   `struct Foo<T>(Arc<T>)` writes `T: Clone`, so `Foo<NotClone>` will not clone
+   even though `Arc<T>` always can.
+10. **`&str` is not an `Iterator`.** A `flatten`-style demo over `Vec<&str>`
+    fails with `E0277`; use `Vec<[char; N]>` or `Vec<Vec<T>>` for the inner
+    collection.
 
 ## Error codes already in use
 
 | Code | Used for |
 | --- | --- |
+| `E0038` | trait is not dyn compatible: `dyn Clone`, generic method, static method, `dyn Extend<T>` |
+| `E0117` | foreign trait for a foreign concrete type (`impl Debug for bool`) |
+| `E0119` | conflicting implementations (two `impl ConvertInto for D`, `impl<T> From<T> for MyType`) |
 | `E0184` | `Copy` + `Drop` on one type |
 | `E0204` | `derive(Copy)` with a non-`Copy` field |
+| `E0210` | orphan rule: an uncovered type parameter (`impl<T> From<T> for Vec<T>`) |
+| `E0223` | ambiguous associated type (`Doubler::Output` when two `Mapper<T>` impls exist) |
+| `E0283` | type annotations needed to pick between two trait impls |
 | `E0277` | missing trait bound (`assert_copy::<String>()`); also a `Sized` requirement (`size_of::<[u8]>()`, a non-last unsized field, `*boxed_slice`) |
 | `E0308` | mismatched types (variance direction, fn-pointer coercion) |
 | `E0381` | use/borrow of a possibly-uninitialized binding |
@@ -185,7 +215,8 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | `E0507` | move out of a `&mut` |
 | `E0515` | return a reference to a temporary / local |
 | `E0594` | write through a `&` |
-| `E0597` | "does not live long enough" |
+| `E0597` | "does not live long enough"; also a missing `for<'a>` bound |
+| `E0599` | no method on this type (typestate: `run` on `SshConnection<Unauthenticated>`) |
 | `E0605` | cast `&T` as `&mut T` |
 | `E0690` | `repr(transparent)` on a struct with two non-trivial fields |
 | `E0793` | reference to a field of a `repr(packed)` struct |
