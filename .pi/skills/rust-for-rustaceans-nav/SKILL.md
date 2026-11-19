@@ -61,10 +61,12 @@ several distinct topics gets several files — `foundation/borrowing/` has six.
 - `types/existential_types/` — inference_and_naming,
   return_position_impl_trait, argument_position_impl_trait,
   associated_type_position
+- `designing_interfaces/unsurprising/` — naming, common_traits,
+  ergonomic_trait_implementations, wrapper_types, deref_and_inherent_methods
 
-Chapters 1 and 2 are complete. **Next is Chapter 3, *Designing Interfaces*** →
-create `src/designing_interfaces/` (sections: *Unsurprising*, *Flexible*,
-*Obvious*, *Constrained*).
+Chapters 1 and 2 are complete, and Chapter 3 is under way: *Unsurprising* is
+done. **Next is *Flexible***, then *Obvious* and *Constrained* — new files under
+`src/designing_interfaces/`, one directory per book section.
 
 The shape is uniform: `src/<chapter>/<section>/<topic>.rs`. `src/types/` is the
 chapter, and each `####` section of the book (`Types in Memory`, `Traits and
@@ -198,7 +200,14 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 10. **`&str` is not an `Iterator`.** A `flatten`-style demo over `Vec<&str>`
     fails with `E0277`; use `Vec<[char; N]>` or `Vec<Vec<T>>` for the inner
     collection.
-11. **Some of the book's advice is ahead of stable Rust — check before
+11. **A doctest that imports a trait from this crate also gets this crate's
+    blanket impls.** The *Ergonomic Trait Implementations* demo "`foo(&bar)` is
+    `E0277`" cannot use the module's own `Describe` once `impl<T: Describe>
+    Describe for &T` exists below it — the trait is in scope, the impl applies,
+    and the doctest compiles, failing with "compiled successfully, but marked
+    `compile_fail`". Spell the trait out locally inside the doctest (and inside
+    the runnable twin) when the point is "only `Bar` implements this".
+12. **Some of the book's advice is ahead of stable Rust — check before
     documenting it as working.** The `IntoIterator` recipe in *Existential
     Types* (`type IntoIter = impl Iterator<Item = Self::Item>;`) is
     `type_alias_impl_trait`, rejected as `E0658` even on rustc 1.100. Record it
@@ -231,6 +240,7 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | `E0507` | move out of a `&mut` |
 | `E0515` | return a reference to a temporary / local |
 | `E0594` | write through a `&` |
+| `E0596` | cannot borrow behind a `&`: `impl Trait for &T` delegating a `&mut self` method |
 | `E0597` | "does not live long enough"; also a missing `for<'a>` bound |
 | `E0599` | no method on this type (typestate: `run` on `SshConnection<Unauthenticated>`) |
 | `E0605` | cast `&T` as `&mut T` |

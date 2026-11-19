@@ -3,5 +3,6 @@
 //! Each chapter gets a module; each section within it gets a file. Items are
 //! public so that their `compile_fail` doctests are collected by `cargo test`.
 
+pub mod designing_interfaces;
 pub mod foundation;
 pub mod types;
