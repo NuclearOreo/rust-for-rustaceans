@@ -63,9 +63,11 @@ several distinct topics gets several files — `foundation/borrowing/` has six.
   associated_type_position
 - `designing_interfaces/unsurprising/` — naming, common_traits,
   ergonomic_trait_implementations, wrapper_types, deref_and_inherent_methods
+- `designing_interfaces/flexible/` — contracts, generic_arguments,
+  object_safety, borrowed_vs_owned, fallible_destructors
 
-Chapters 1 and 2 are complete, and Chapter 3 is under way: *Unsurprising* is
-done. **Next is *Flexible***, then *Obvious* and *Constrained* — new files under
+Chapters 1 and 2 are complete, and Chapter 3 is under way: *Unsurprising* and
+*Flexible* are done. **Next is *Obvious***, then *Constrained* — new files under
 `src/designing_interfaces/`, one directory per book section.
 
 The shape is uniform: `src/<chapter>/<section>/<topic>.rs`. `src/types/` is the
@@ -158,6 +160,9 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
    `ptr_arg`, `let_and_return`, `manual_async_fn` (an `impl Future` return that
    exists to sit beside its `async fn` twin), `vec_init_then_push` (`Vec::new()`
    then `push` *is* the inference demo).
+   The same applies to the rustc lint `dyn_drop`, which fires on
+   `Box<dyn Drop>` and whose advice (`needs_drop`) is not the point of the
+   deferred-drop demo — allow it on the fn with a comment.
 5. **`let mut slot = T::new(); slot = other;`** triggers `unused_assignments`
    because the first value is never read — and it also proves nothing. Read the
    old value first, then show the drop (see
@@ -225,10 +230,12 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | `E0117` | foreign trait for a foreign concrete type (`impl Debug for bool`) |
 | `E0119` | conflicting implementations (two `impl ConvertInto for D`, `impl<T> From<T> for MyType`) |
 | `E0121` | `_` in an item signature (`fn make() -> _`, naming an `async fn`'s future) |
+| `E0133` | unsafe operation in a safe fn: `ManuallyDrop::take` (the book's third destructor workaround) |
 | `E0184` | `Copy` + `Drop` on one type |
 | `E0204` | `derive(Copy)` with a non-`Copy` field |
 | `E0210` | orphan rule: an uncovered type parameter (`impl<T> From<T> for Vec<T>`) |
 | `E0223` | ambiguous associated type (`Doubler::Output` when two `Mapper<T>` impls exist) |
+| `E0225` | two non-auto traits in one trait object (`&(dyn Hash + Eq)`) |
 | `E0283` | type annotations needed to pick between two trait impls |
 | `E0277` | missing trait bound (`assert_copy::<String>()`); also a `Sized` requirement (`size_of::<[u8]>()`, a non-last unsized field, `*boxed_slice`) |
 | `E0308` | mismatched types (variance direction, fn-pointer coercion) |
@@ -237,12 +244,13 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | `E0499` | two `&mut` at once |
 | `E0502` | shared and mutable borrow overlap |
 | `E0506` | assign to a place while it is borrowed |
-| `E0507` | move out of a `&mut` |
+| `E0507` | move out of a `&mut`; also `self.close()` inside `Drop::drop(&mut self)` |
+| `E0509` | move a field out of a type that implements `Drop` |
 | `E0515` | return a reference to a temporary / local |
 | `E0594` | write through a `&` |
 | `E0596` | cannot borrow behind a `&`: `impl Trait for &T` delegating a `&mut self` method |
 | `E0597` | "does not live long enough"; also a missing `for<'a>` bound |
-| `E0599` | no method on this type (typestate: `run` on `SshConnection<Unauthenticated>`) |
+| `E0599` | no method on this type (typestate: `run` on `SshConnection<Unauthenticated>`; `.len()` on a returned `impl AsRef<str>`) |
 | `E0605` | cast `&T` as `&mut T` |
 | `E0658` | unstable feature: `type IntoIter = impl Iterator<…>` (`type_alias_impl_trait`) |
 | `E0690` | `repr(transparent)` on a struct with two non-trivial fields |

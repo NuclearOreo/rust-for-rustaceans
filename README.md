@@ -55,13 +55,20 @@ This repo is not a reimplementation of the book. It's a scratchpad where each ch
 │           └── associated_type_position.rs   # `type IntoIter = impl Iterator<..>`: nightly only
 │   └── designing_interfaces/  # Ch. 3 — Designing Interfaces
 │       ├── mod.rs
-│       └── unsurprising/      # "Unsurprising"
+│       ├── unsurprising/      # "Unsurprising"
+│       │   ├── mod.rs
+│       │   ├── naming.rs      # iter / into_inner / …Error conventions
+│       │   ├── common_traits.rs  # Debug, Send/Sync/Unpin, Clone/Default, comparison; not Copy
+│       │   ├── ergonomic_trait_implementations.rs  # &T, &mut T, Box<T>, IntoIterator for references
+│       │   ├── wrapper_types.rs  # Deref, AsRef, From/Into, Borrow
+│       │   └── deref_and_inherent_methods.rs  # static fn instead of an inherent method
+│       └── flexible/          # "Flexible"
 │           ├── mod.rs
-│           ├── naming.rs      # iter / into_inner / …Error conventions
-│           ├── common_traits.rs  # Debug, Send/Sync/Unpin, Clone/Default, comparison; not Copy
-│           ├── ergonomic_trait_implementations.rs  # &T, &mut T, Box<T>, IntoIterator for references
-│           ├── wrapper_types.rs  # Deref, AsRef, From/Into, Borrow
-│           └── deref_and_inherent_methods.rs  # static fn instead of an inherent method
+│           ├── contracts.rs   # Listing 3-1; requirements vs promises, Cow, impl AsRef
+│           ├── generic_arguments.rs  # relaxing an argument, E0283, who picks dynamic dispatch
+│           ├── object_safety.rs      # dyn Notifier, where Self: Sized, dyn Seek, drop glue
+│           ├── borrowed_vs_owned.rs  # Cow, caller-controlled allocation, Copy ≠ cheap, lifetimes
+│           └── fallible_destructors.rs  # explicit destructor + best-effort Drop, Option/mem::take
 ├── book/
 │   ├── Rust_for_Rustaceans.md    # local copy of the book text (for reference/grepping)
 │   └── Rust_for_Rustaceans.pdf
@@ -139,7 +146,7 @@ Conventions used here:
 | --- | --- | --- | --- |
 | 1 | Foundations | `src/foundation/` | ✅ *Talking About Memory* · *Ownership* · *Borrowing and Lifetimes* |
 | 2 | Types | `src/types/` | ✅ *Types in Memory* · *Traits and Trait Bounds* · *Existential Types* |
-| 3 | Designing Interfaces | `src/designing_interfaces/` | ⏳ *Unsurprising* |
+| 3 | Designing Interfaces | `src/designing_interfaces/` | ⏳ *Unsurprising* · *Flexible* |
 | 4 | Error Handling | `src/error_handling/` | not started |
 | 5 | Project Structure | `src/project_structure/` | not started |
 | 6 | Testing | `src/testing/` | not started |
