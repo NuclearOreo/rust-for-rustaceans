@@ -65,10 +65,12 @@ several distinct topics gets several files — `foundation/borrowing/` has six.
   ergonomic_trait_implementations, wrapper_types, deref_and_inherent_methods
 - `designing_interfaces/flexible/` — contracts, generic_arguments,
   object_safety, borrowed_vs_owned, fallible_destructors
+- `designing_interfaces/obvious/` — documentation, semantic_typing, typestates,
+  must_use
 
-Chapters 1 and 2 are complete, and Chapter 3 is under way: *Unsurprising* and
-*Flexible* are done. **Next is *Obvious***, then *Constrained* — new files under
-`src/designing_interfaces/`, one directory per book section.
+Chapters 1 and 2 are complete, and Chapter 3 is under way: *Unsurprising*,
+*Flexible* and *Obvious* are done. **Next is *Constrained*** — the last section
+of Chapter 3, and the last directory under `src/designing_interfaces/`.
 
 The shape is uniform: `src/<chapter>/<section>/<topic>.rs`. `src/types/` is the
 chapter, and each `####` section of the book (`Types in Memory`, `Traits and
@@ -129,7 +131,12 @@ cargo clippy --all-targets  # must print zero warnings
 cargo doc --no-deps         # must print zero warnings (broken intra-doc links)
 ```
 
-All three clean is the definition of done. Useful filters:
+All three clean is the definition of done. Note that clippy also runs the
+pedantic `missing_errors_doc` / `missing_panics_doc` lints that
+`obvious::documentation` turns on for its own `api` module, so a `Result` method
+without `# Errors` fails the loop rather than merely being untidy.
+
+Useful filters:
 
 ```sh
 cargo test borrowing::         # one section
@@ -142,8 +149,10 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 
 1. **A doctest written as `//` inside a function body is a plain comment.**
    Rustdoc never sees it, so the test does not exist and nothing fails. Doc
-   comments must sit above an item. Symptom: the doctest count did not increase.
-   Always cross-check with `cargo test --doc 2>&1 | grep "compile fail"`.
+   comments must sit above an item — or be module docs (`//!`), which are
+   collected too; the end-to-end example in `obvious::documentation` is a
+   doctest in a `//!` block. Symptom: the doctest count did not increase. Always
+   cross-check with `cargo test --doc 2>&1 | grep "compile fail"`.
 2. **"Illegal" snippets that actually compile**, which makes the doctest fail:
    - `let a = &mut x; let b = &mut x;` — fine if `a` is never used; NLL ends it
      immediately. Use `*a += 1` after `*b` to force the overlap.
@@ -183,15 +192,17 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
    wide pointer carries a length or a vtable, use `size_of_val`, which reads the
    metadata for you — and never `size_of_val(&handle)` on a `&dyn T`, which is a
    `&&dyn T` (`clippy::size_of_ref`) measuring the handle instead of the value.
-8. **Not every rejection has an error code.** Two seen so far: calling a
+8. **Not every rejection has an error code.** Three seen so far: calling a
    `where Self: Sized` method through a trait object ("the `make` method cannot
-   be invoked on a trait object"), and a future that is not `Send` because a
+   be invoked on a trait object"), a future that is not `Send` because a
    non-`Send` value is held across an `.await` ("future cannot be sent between
-   threads safely" — an async-specific diagnostic with no `E…`). Neither can be a
-   `compile_fail,E….` doctest under rule 4. Demonstrate the *positive* half — the
-   trait is still object-safe, the owned future *is* `Send` — and describe the
-   rejection in prose, in a ```text block so nobody mistakes it for a test.
-   Always confirm a code with `rustc` before writing it into a doctest.
+   threads safely" — an async-specific diagnostic with no `E…`), and
+   `#[must_use]` (an ignored return value *warns*; `let _ =` silences it). None
+   can be a `compile_fail,E….` doctest under rule 4. Demonstrate the *positive*
+   half — the trait is still object-safe, the owned future *is* `Send`, the code
+   still compiles and runs — and describe the rejection in prose, in a ```text
+   block so nobody mistakes it for a test. Always confirm a code with `rustc`
+   before writing it into a doctest.
 9. **Orphan-rule demos need a crate boundary, and a doctest provides one.** A
    doctest is compiled as its own crate with this one as a dependency, so items
    from `rust_for_rustaceans` are *foreign* there. That is the only way to test
@@ -250,9 +261,11 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | `E0594` | write through a `&` |
 | `E0596` | cannot borrow behind a `&`: `impl Trait for &T` delegating a `&mut self` method |
 | `E0597` | "does not live long enough"; also a missing `for<'a>` bound |
-| `E0599` | no method on this type (typestate: `run` on `SshConnection<Unauthenticated>`; `.len()` on a returned `impl AsRef<str>`) |
+| `E0599` | no method on this type (typestate: `run` on `SshConnection<Unauthenticated>`, `launch` on `Rocket<Launched>`; `.len()` on a returned `impl AsRef<str>`) |
+| `E0603` | private constructor across a crate boundary (`Slot(0)` where the newtype's field is private) |
 | `E0605` | cast `&T` as `&mut T` |
-| `E0658` | unstable feature: `type IntoIter = impl Iterator<…>` (`type_alias_impl_trait`) |
+| `E0618` | call syntax on a non-function: a payload passed to a unit variant (`Target::Nowhere("x")`) |
+| `E0658` | unstable feature: `type IntoIter = impl Iterator<…>` (`type_alias_impl_trait`); `#[doc(cfg(..))]` (`doc_cfg`) |
 | `E0690` | `repr(transparent)` on a struct with two non-trivial fields |
 | `E0793` | reference to a field of a `repr(packed)` struct |
 

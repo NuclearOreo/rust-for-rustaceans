@@ -9,14 +9,15 @@
 //! > These essentially boil down to four principles: your interfaces should be
 //! > _unsurprising_ , _flexible_ , _obvious_ , and _constrained_ .
 //!
-//! The chapter's first two principles are covered so far:
+//! The chapter's first three principles are covered so far:
 //!
 //! | Section | Book subsections | What it pins down |
 //! | --- | --- | --- |
 //! | [`unsurprising`] | *Naming Practices*, *Common Traits for Types*, *Ergonomic Trait Implementations*, *Wrapper Types*, *Deref and Inherent Methods* | names that mean what they say, the traits users assume exist, and the impls that keep `&T` and `Box<T>` from surprising them |
 //! | [`flexible`] | *Generic Arguments*, *Object Safety*, *Borrowed vs. Owned*, *Fallible and Blocking Destructors* | the requirements and promises an interface binds itself to, and which changes to them are additive |
+//! | [`obvious`] | *Documentation*, *Type System Guidance* | documented failures that really fail, semantic types that reject the mistake, and typestates that make it unreachable |
 //!
-//! The remaining sections — *Obvious* and *Constrained* — are not started yet.
+//! The remaining section — *Constrained* — is not started yet.
 //!
 //! # What "unsurprising" means in code
 //!
@@ -37,6 +38,19 @@
 //! have rejected; a tightened requirement or a withdrawn promise is a
 //! subtraction, so it is a `compile_fail` doctest with the caller's error code
 //! (`E0283`, `E0599`, `E0509`, …).
+//!
+//! # What "obvious" means in code
+//!
+//! *Obvious* splits along its own two techniques. A documentation claim is a
+//! behaviour claim — "# Panics if the input is empty" is a test, and the `api`
+//! module in [`obvious::documentation`] makes the presence of `# Errors` and
+//! `# Panics` sections a clippy failure when they are missing. A type-system
+//! claim is a compile-time claim, so the mistakes are `compile_fail` doctests:
+//! `E0599` for a method called at the wrong stage, `E0308` for a swapped flag
+//! or a mixed unit, `E0603` for a forged token. `#[must_use]` alone only warns,
+//! so its half is demonstrated as "this compiles and runs" plus a quoted
+//! diagnostic.
 
 pub mod flexible;
+pub mod obvious;
 pub mod unsurprising;
