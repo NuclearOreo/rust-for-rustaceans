@@ -67,10 +67,13 @@ several distinct topics gets several files — `foundation/borrowing/` has six.
   object_safety, borrowed_vs_owned, fallible_destructors
 - `designing_interfaces/obvious/` — documentation, semantic_typing, typestates,
   must_use
+- `designing_interfaces/constrained/` — type_modifications,
+  trait_implementations, reexports, auto_traits, hidden_items
 
-Chapters 1 and 2 are complete, and Chapter 3 is under way: *Unsurprising*,
-*Flexible* and *Obvious* are done. **Next is *Constrained*** — the last section
-of Chapter 3, and the last directory under `src/designing_interfaces/`.
+Chapter 3 is complete: all four sections (*Unsurprising*, *Flexible*, *Obvious*,
+*Constrained*) are done. **Next is Chapter 4, *Error Handling*** — new files under
+`src/error_handling/`, one directory per book section (*Representing Errors*,
+*Propagating Errors*).
 
 The shape is uniform: `src/<chapter>/<section>/<topic>.rs`. `src/types/` is the
 chapter, and each `####` section of the book (`Types in Memory`, `Traits and
@@ -126,7 +129,8 @@ that calls it. File naming follows the topic, not the listing number.
 ## Verification loop
 
 ```sh
-cargo test                  # two "test result: ok" lines: unit tests, then doctests
+cargo test                  # three "test result: ok" lines: unit tests, then the
+                            # runnable doctests, then the rest (mostly compile_fail)
 cargo clippy --all-targets  # must print zero warnings
 cargo doc --no-deps         # must print zero warnings (broken intra-doc links)
 ```
@@ -157,6 +161,10 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
    - `let a = &mut x; let b = &mut x;` — fine if `a` is never used; NLL ends it
      immediately. Use `*a += 1` after `*b` to force the overlap.
    - `let was = *s;` — legal when `s: Box<i32>`; only `&mut Box<i32>` is `E0507`.
+   - `let _ = x;` is **not** a use: the wildcard pattern binds nothing, so it does
+     not move `x` and never produces `E0382`. Bind to a name (`let _also = x;`)
+     when the demo is "this value was moved". It is also why `let _ =` silences
+     `unused_must_use`.
    - `let x: usize; ptr::addr_of!(x)` — `E0381`; Rust will not even hand out the
      address of an uninitialized local. Use `MaybeUninit`.
 3. **Deref depth.** With `let x = Box::new(42); let r = &x;`, `*r` is a `Box`,
@@ -168,7 +176,9 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
    explaining why. Existing precedents: `replace_box`, `needless_late_init`,
    `ptr_arg`, `let_and_return`, `manual_async_fn` (an `impl Future` return that
    exists to sit beside its `async fn` twin), `vec_init_then_push` (`Vec::new()`
-   then `push` *is* the inference demo).
+   then `push` *is* the inference demo). `manual_non_exhaustive` is the
+   `Constrained` case: `Flags { pub field, _private: () }` *is* Listing 3-4's
+   private field, and the lint's fix would replace the very thing being shown.
    The same applies to the rustc lint `dyn_drop`, which fires on
    `Box<dyn Drop>` and whose advice (`needs_drop`) is not the point of the
    deferred-drop demo — allow it on the fn with a comment.
@@ -236,10 +246,13 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 
 | Code | Used for |
 | --- | --- |
+| `E0027` | pattern does not mention a field, including a private one (`Flags { field: true }`) |
+| `E0034` | multiple applicable items in scope: a new `impl` made a downstream method call ambiguous |
 | `E0038` | trait is not dyn compatible: `dyn Clone`, generic method, static method, `dyn Extend<T>` |
+| `E0046` | not all trait items implemented: a required method was added to a trait |
 | `E0107` | turbofish on an argument-position `impl Trait` (takes 0 type arguments) |
 | `E0117` | foreign trait for a foreign concrete type (`impl Debug for bool`) |
-| `E0119` | conflicting implementations (two `impl ConvertInto for D`, `impl<T> From<T> for MyType`) |
+| `E0119` | conflicting implementations (two `impl ConvertInto for D`, `impl<T> From<T> for MyType`, a blanket impl vs a downstream one) |
 | `E0121` | `_` in an item signature (`fn make() -> _`, naming an `async fn`'s future) |
 | `E0133` | unsafe operation in a safe fn: `ManuallyDrop::take` (the book's third destructor workaround) |
 | `E0184` | `Copy` + `Drop` on one type |
@@ -247,24 +260,30 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | `E0210` | orphan rule: an uncovered type parameter (`impl<T> From<T> for Vec<T>`) |
 | `E0223` | ambiguous associated type (`Doubler::Output` when two `Mapper<T>` impls exist) |
 | `E0225` | two non-auto traits in one trait object (`&(dyn Hash + Eq)`) |
+| `E0277` | missing trait bound (`assert_copy::<String>()`); also a `Sized` requirement (`size_of::<[u8]>()`, a non-last unsized field, `*boxed_slice`), a sealed supertrait, and a lost auto-trait (`is_normal::<NotSend>()`) |
 | `E0283` | type annotations needed to pick between two trait impls |
-| `E0277` | missing trait bound (`assert_copy::<String>()`); also a `Sized` requirement (`size_of::<[u8]>()`, a non-last unsized field, `*boxed_slice`) |
-| `E0308` | mismatched types (variance direction, fn-pointer coercion) |
+| `E0308` | mismatched types (variance direction, fn-pointer coercion; two major versions' `Empty`) |
 | `E0381` | use/borrow of a possibly-uninitialized binding |
-| `E0382` | use of moved value |
+| `E0382` | use of moved value (only a *binding* moves — `let _ = x;` does not) |
+| `E0423` | unit-struct constructor removed by a private field (`let _ = Unit;`) |
+| `E0451` | field is private (`UnitWithPrivateField { _private: () }` from another crate) |
 | `E0499` | two `&mut` at once |
 | `E0502` | shared and mutable borrow overlap |
 | `E0506` | assign to a place while it is borrowed |
 | `E0507` | move out of a `&mut`; also `self.close()` inside `Drop::drop(&mut self)` |
 | `E0509` | move a field out of a type that implements `Drop` |
 | `E0515` | return a reference to a temporary / local |
+| `E0532` | tuple pattern against a named struct (`let NamedPoint(x, y) = p;`) |
 | `E0594` | write through a `&` |
 | `E0596` | cannot borrow behind a `&`: `impl Trait for &T` delegating a `&mut self` method |
 | `E0597` | "does not live long enough"; also a missing `for<'a>` bound |
 | `E0599` | no method on this type (typestate: `run` on `SshConnection<Unauthenticated>`, `launch` on `Rocket<Launched>`; `.len()` on a returned `impl AsRef<str>`) |
-| `E0603` | private constructor across a crate boundary (`Slot(0)` where the newtype's field is private) |
+| `E0603` | private constructor across a crate boundary (`Slot(0)`); also a `pub(crate)` item imported from outside |
 | `E0605` | cast `&T` as `&mut T` |
+| `E0616` | field is private (`iter.inner`, which is what makes a newtype's identity the wrapper's) |
 | `E0618` | call syntax on a non-function: a payload passed to a unit variant (`Target::Nowhere("x")`) |
+| `E0638` | pattern lacks `..` against a `#[non_exhaustive]` struct |
+| `E0639` | struct literal against a `#[non_exhaustive]` struct from outside its crate |
 | `E0658` | unstable feature: `type IntoIter = impl Iterator<…>` (`type_alias_impl_trait`); `#[doc(cfg(..))]` (`doc_cfg`) |
 | `E0690` | `repr(transparent)` on a struct with two non-trivial fields |
 | `E0793` | reference to a field of a `repr(packed)` struct |

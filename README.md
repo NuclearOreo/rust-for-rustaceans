@@ -69,12 +69,19 @@ This repo is not a reimplementation of the book. It's a scratchpad where each ch
 │       │   ├── object_safety.rs      # dyn Notifier, where Self: Sized, dyn Seek, drop glue
 │       │   ├── borrowed_vs_owned.rs  # Cow, caller-controlled allocation, Copy ≠ cheap, lifetimes
 │       │   └── fallible_destructors.rs  # explicit destructor + best-effort Drop, Option/mem::take
-│       └── obvious/           # "Obvious"
+│       ├── obvious/           # "Obvious"
+│       │   ├── mod.rs
+│       │   ├── documentation.rs  # # Errors/# Panics as clippy-enforced docs, end-to-end example, doc(alias/hidden/cfg)
+│       │   ├── semantic_typing.rs  # bools → enums, unit newtypes, capability token, bool+pointer → enum
+│       │   ├── typestates.rs       # Listing 3-2; PhantomData stages vs an enum that panics
+│       │   └── must_use.rs         # #[must_use] on fn/type/trait: a warning, not a rule
+│       └── constrained/       # "Constrained"
 │           ├── mod.rs
-│           ├── documentation.rs  # # Errors/# Panics as clippy-enforced docs, end-to-end example, doc(alias/hidden/cfg)
-│           ├── semantic_typing.rs  # bools → enums, unit newtypes, capability token, bool+pointer → enum
-│           ├── typestates.rs       # Listing 3-2; PhantomData stages vs an enum that panics
-│           └── must_use.rs         # #[must_use] on fn/type/trait: a warning, not a rule
+│           ├── type_modifications.rs  # Listings 3-3/3-4; private field breaks ctor + patterns, non_exhaustive, pub(crate)
+│           ├── trait_implementations.rs  # Listings 3-5/3-6; E0034 ambiguity, blanket impls, sealed traits
+│           ├── reexports.rs   # Listing 3-7; dependency major versions are distinct types, newtype/impl Trait, semver trick
+│           ├── auto_traits.rs # Listing 3-8; is_normal::<T>(), Send/Sync/Unpin/UnwindSafe through impl Trait
+│           └── hidden_items.rs  # #[doc(hidden)]: nameable but not contract; its auto-traits still are
 ├── book/
 │   ├── Rust_for_Rustaceans.md    # local copy of the book text (for reference/grepping)
 │   └── Rust_for_Rustaceans.pdf
@@ -152,7 +159,7 @@ Conventions used here:
 | --- | --- | --- | --- |
 | 1 | Foundations | `src/foundation/` | ✅ *Talking About Memory* · *Ownership* · *Borrowing and Lifetimes* |
 | 2 | Types | `src/types/` | ✅ *Types in Memory* · *Traits and Trait Bounds* · *Existential Types* |
-| 3 | Designing Interfaces | `src/designing_interfaces/` | ⏳ *Unsurprising* · *Flexible* · *Obvious* |
+| 3 | Designing Interfaces | `src/designing_interfaces/` | ✅ *Unsurprising* · *Flexible* · *Obvious* · *Constrained* |
 | 4 | Error Handling | `src/error_handling/` | not started |
 | 5 | Project Structure | `src/project_structure/` | not started |
 | 6 | Testing | `src/testing/` | not started |

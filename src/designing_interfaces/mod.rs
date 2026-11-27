@@ -9,15 +9,14 @@
 //! > These essentially boil down to four principles: your interfaces should be
 //! > _unsurprising_ , _flexible_ , _obvious_ , and _constrained_ .
 //!
-//! The chapter's first three principles are covered so far:
+//! All four principles of the chapter are covered:
 //!
 //! | Section | Book subsections | What it pins down |
 //! | --- | --- | --- |
 //! | [`unsurprising`] | *Naming Practices*, *Common Traits for Types*, *Ergonomic Trait Implementations*, *Wrapper Types*, *Deref and Inherent Methods* | names that mean what they say, the traits users assume exist, and the impls that keep `&T` and `Box<T>` from surprising them |
 //! | [`flexible`] | *Generic Arguments*, *Object Safety*, *Borrowed vs. Owned*, *Fallible and Blocking Destructors* | the requirements and promises an interface binds itself to, and which changes to them are additive |
 //! | [`obvious`] | *Documentation*, *Type System Guidance* | documented failures that really fail, semantic types that reject the mistake, and typestates that make it unreachable |
-//!
-//! The remaining section — *Constrained* — is not started yet.
+//! | [`constrained`] | *Type Modifications*, *Trait Implementations*, *Hidden Contracts* | which changes a user's code depends on — and the escapes (`#[non_exhaustive]`, sealed traits, newtypes, `impl Trait`, the semver trick) that buy back the freedom to change |
 //!
 //! # What "unsurprising" means in code
 //!
@@ -50,7 +49,21 @@
 //! or a mixed unit, `E0603` for a forged token. `#[must_use]` alone only warns,
 //! so its half is demonstrated as "this compiles and runs" plus a quoted
 //! diagnostic.
+//!
+//! # What "constrained" means in code
+//!
+//! *Constrained* is the one section whose evidence is mostly rejection, because
+//! a breaking change *is* a program that used to compile and no longer does.
+//! Each one is a `compile_fail` doctest reproducing the user's code — a doctest
+//! is its own crate, so the side of the boundary that the change breaks is real
+//! — paired with the runnable version that still works: `E0423` for a vanished
+//! constructor, `E0034` for a now-ambiguous method, `E0308` for two `Empty`
+//! types from different major versions. The escapes point the other way, so
+//! they are runnable demos where the *author's* crate compiles what the user's
+//! crate is refused (`#[non_exhaustive]`) or where one type deliberately stands
+//! in for two (the semver trick).
 
+pub mod constrained;
 pub mod flexible;
 pub mod obvious;
 pub mod unsurprising;
