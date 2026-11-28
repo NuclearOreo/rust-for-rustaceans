@@ -71,12 +71,12 @@ several distinct topics gets several files — `foundation/borrowing/` has six.
   trait_implementations, reexports, auto_traits, hidden_items
 - `error_handling/representing_errors/` — enumeration, opaque_errors,
   special_error_cases
+- `error_handling/propagating_errors/` — question_mark, from_and_into,
+  try_blocks
 
-Chapter 3 is complete, and Chapter 4 is underway: *Representing Errors* is done
-(enumeration, erasure, and the special cases). **Next is *Propagating
-Errors*** — `?` through `From`, the still-unstable `Try` trait, and try blocks
-(`try { }` is still a nightly feature) — under
-`src/error_handling/propagating_errors/`.
+Chapters 1–4 are complete. **Next is Chapter 5, *Project Structure*** —
+features, workspaces, project configuration, conditional compilation, and
+versioning — under `src/project_structure/`.
 
 The shape is uniform: `src/<chapter>/<section>/<topic>.rs`. `src/types/` is the
 chapter, and each `####` section of the book (`Types in Memory`, `Traits and
@@ -225,7 +225,10 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
    `impl<T> From<T> for MyType` is orphan-legal but overlaps the std reflexive
    `impl<T> From<T> for T` (`E0119`, not `E0210`); and `#[derive(Clone)]` on
    `struct Foo<T>(Arc<T>)` writes `T: Clone`, so `Foo<NotClone>` will not clone
-   even though `Arc<T>` always can.
+   even though `Arc<T>` always can. A third: since 1.41 a foreign self type is
+   legal when the parameter is *covered* by a local type —
+   `impl<T> From<Rows<T>> for Vec<T>` compiles — so only the uncovered
+   `impl<T> From<T> for Vec<T>` is `E0210`.
 10. **`&str` is not an `Iterator`.** A `flatten`-style demo over `Vec<&str>`
     fails with `E0277`; use `Vec<[char; N]>` or `Vec<Vec<T>>` for the inner
     collection.
@@ -255,6 +258,12 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
     `type_id_on_box` flags the method-call form (the `opaque_errors` demo spells
     the UFCS, since the trap is the demo). Same family: `std::io::Error` exposes
     its inner error through `get_ref()`, not `downcast_ref` on the error itself.
+14. **A bare `?` in a doctest does not compile.** Rustdoc's implicit `main`
+    returns `()`, so `?` is `E0277` ("can only be used in a function that
+    returns `Result` or `Option`"). Two idioms work: end the snippet with
+    `# Ok::<(), E>(())`, which makes the generated `main` return that type, or
+    declare `fn main() -> Result<(), E>`. Both are used in
+    `propagating_errors::question_mark`; `cargo test --doc` verifies them.
 
 ## Error codes already in use
 
@@ -274,7 +283,7 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | `E0210` | orphan rule: an uncovered type parameter (`impl<T> From<T> for Vec<T>`) |
 | `E0223` | ambiguous associated type (`Doubler::Output` when two `Mapper<T>` impls exist) |
 | `E0225` | two non-auto traits in one trait object (`&(dyn Hash + Eq)`) |
-| `E0277` | missing trait bound (`assert_copy::<String>()`); also a `Sized` requirement (`size_of::<[u8]>()`, a non-last unsized field, `*boxed_slice`), a sealed supertrait, a lost auto-trait (`is_normal::<NotSend>()`), `Box<dyn Error>` not being `Error`, `()` not being `Error`, and a join payload (`Box<dyn Any + Send>`) not being `Error` |
+| `E0277` | missing trait bound (`assert_copy::<String>()`); also a `Sized` requirement (`size_of::<[u8]>()`, a non-last unsized field, `*boxed_slice`), a sealed supertrait, a lost auto-trait (`is_normal::<NotSend>()`), `Box<dyn Error>` not being `Error`, `()` not being `Error`, a join payload (`Box<dyn Any + Send>`) not being `Error`, and `?` on an `Option` in a `Result` function (or vice versa, or on a wrapper whose `Try` impl is nightly-only) |
 | `E0283` | type annotations needed to pick between two trait impls |
 | `E0308` | mismatched types (variance direction, fn-pointer coercion; two major versions' `Empty`; an `Option` where a `Result<_, ()>` was expected; `Err(())` in a `Result<T, !>`) |
 | `E0381` | use/borrow of a possibly-uninitialized binding |
@@ -299,7 +308,7 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | `E0618` | call syntax on a non-function: a payload passed to a unit variant (`Target::Nowhere("x")`) |
 | `E0638` | pattern lacks `..` against a `#[non_exhaustive]` struct |
 | `E0639` | struct literal against a `#[non_exhaustive]` struct from outside its crate |
-| `E0658` | unstable feature: `type IntoIter = impl Iterator<…>` (`type_alias_impl_trait`); `#[doc(cfg(..))]` (`doc_cfg`) |
+| `E0658` | unstable feature: `type IntoIter = impl Iterator<…>` (`type_alias_impl_trait`); `#[doc(cfg(..))]` (`doc_cfg`); `std::ops::Try` (`try_trait_v2`); `try { }` (`try_blocks`) |
 | `E0690` | `repr(transparent)` on a struct with two non-trivial fields |
 | `E0793` | reference to a field of a `repr(packed)` struct |
 

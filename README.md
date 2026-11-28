@@ -84,11 +84,16 @@ This repo is not a reimplementation of the book. It's a scratchpad where each ch
 │           └── hidden_items.rs  # #[doc(hidden)]: nameable but not contract; its auto-traits still are
 │   └── error_handling/     # Ch. 4 — Error Handling
 │       ├── mod.rs
-│       └── representing_errors/  # "Representing Errors"
+│       ├── representing_errors/  # "Representing Errors"
+│       │   ├── mod.rs
+│       │   ├── enumeration.rs          # Listing 4-1; CopyError::In/Out, Error/Display/Debug/Send/Sync/'static, map_err not From
+│       │   ├── opaque_errors.rs        # concrete DecodeError (line/status, private cause), BoxError, downcasting, TypeId, size
+│       │   └── special_error_cases.rs  # Result<T,()> vs Option, unit struct error, never type, thread::Result
+│       └── propagating_errors/   # "Propagating Errors"
 │           ├── mod.rs
-│           ├── enumeration.rs          # Listing 4-1; CopyError::In/Out, Error/Display/Debug/Send/Sync/'static, map_err not From
-│           ├── opaque_errors.rs        # concrete DecodeError (line/status, private cause), BoxError, downcasting, TypeId, size
-│           └── special_error_cases.rs  # Result<T,()> vs Option, unit struct error, never type, thread::Result
+│           ├── question_mark.rs        # ? is unwrap-or-return; one From hop per ?; E0277 both directions
+│           ├── from_and_into.rs        # implement From / use Into in bounds; 1.41 two-way conversion; ? uses From not Into
+│           └── try_blocks.rs           # Listing 4-2 skips cleanup; try { } is E0658; closure and labelled-block stand-ins
 ├── book/
 │   ├── Rust_for_Rustaceans.md    # local copy of the book text (for reference/grepping)
 │   └── Rust_for_Rustaceans.pdf
@@ -167,7 +172,7 @@ Conventions used here:
 | 1 | Foundations | `src/foundation/` | ✅ *Talking About Memory* · *Ownership* · *Borrowing and Lifetimes* |
 | 2 | Types | `src/types/` | ✅ *Types in Memory* · *Traits and Trait Bounds* · *Existential Types* |
 | 3 | Designing Interfaces | `src/designing_interfaces/` | ✅ *Unsurprising* · *Flexible* · *Obvious* · *Constrained* |
-| 4 | Error Handling | `src/error_handling/` | ⏳ *Representing Errors* done · *Propagating Errors* next |
+| 4 | Error Handling | `src/error_handling/` | ✅ *Representing Errors* · *Propagating Errors* |
 | 5 | Project Structure | `src/project_structure/` | not started |
 | 6 | Testing | `src/testing/` | not started |
 | 7 | Macros | `src/macros/` | not started |
