@@ -69,11 +69,14 @@ several distinct topics gets several files — `foundation/borrowing/` has six.
   must_use
 - `designing_interfaces/constrained/` — type_modifications,
   trait_implementations, reexports, auto_traits, hidden_items
+- `error_handling/representing_errors/` — enumeration, opaque_errors,
+  special_error_cases
 
-Chapter 3 is complete: all four sections (*Unsurprising*, *Flexible*, *Obvious*,
-*Constrained*) are done. **Next is Chapter 4, *Error Handling*** — new files under
-`src/error_handling/`, one directory per book section (*Representing Errors*,
-*Propagating Errors*).
+Chapter 3 is complete, and Chapter 4 is underway: *Representing Errors* is done
+(enumeration, erasure, and the special cases). **Next is *Propagating
+Errors*** — `?` through `From`, the still-unstable `Try` trait, and try blocks
+(`try { }` is still a nightly feature) — under
+`src/error_handling/propagating_errors/`.
 
 The shape is uniform: `src/<chapter>/<section>/<topic>.rs`. `src/types/` is the
 chapter, and each `####` section of the book (`Types in Memory`, `Traits and
@@ -240,7 +243,18 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
     as a rejection, then show what stable has: a named helper type (zero cost,
     but exported), `Box<dyn Iterator>` (erased, one allocation), or `impl Trait`
     on an *inherent* method (stable, and no type escapes) — everything except
-    the associated-type position.
+    the associated-type position. The opposite has also happened: the never type
+    (`Result<T, !>`, `let x: ! = …`) *is* stable on 1.100, so Chapter 4's never-
+    type demos are runnable rather than rejected (`Err(())` is `E0308`).
+13. **`Box<dyn Any>::type_id()` is the id of the box, not of the payload.**
+    The blanket `impl<T> Any for T` applies to `Box<dyn Any>` itself, so
+    `erased.type_id()` returns `TypeId::of::<Box<dyn Any>>()` and two boxes with
+    different payloads compare equal. `downcast_ref` does not have this problem:
+    it is a method of `dyn Any`. Reach the payload with `(*erased).type_id()`;
+    note that `&erased` passed as `&dyn Any` also erases the *box*, and clippy's
+    `type_id_on_box` flags the method-call form (the `opaque_errors` demo spells
+    the UFCS, since the trap is the demo). Same family: `std::io::Error` exposes
+    its inner error through `get_ref()`, not `downcast_ref` on the error itself.
 
 ## Error codes already in use
 
@@ -260,25 +274,26 @@ cargo test --doc 2>&1 | grep "compile fail"   # list every rejected program
 | `E0210` | orphan rule: an uncovered type parameter (`impl<T> From<T> for Vec<T>`) |
 | `E0223` | ambiguous associated type (`Doubler::Output` when two `Mapper<T>` impls exist) |
 | `E0225` | two non-auto traits in one trait object (`&(dyn Hash + Eq)`) |
-| `E0277` | missing trait bound (`assert_copy::<String>()`); also a `Sized` requirement (`size_of::<[u8]>()`, a non-last unsized field, `*boxed_slice`), a sealed supertrait, and a lost auto-trait (`is_normal::<NotSend>()`) |
+| `E0277` | missing trait bound (`assert_copy::<String>()`); also a `Sized` requirement (`size_of::<[u8]>()`, a non-last unsized field, `*boxed_slice`), a sealed supertrait, a lost auto-trait (`is_normal::<NotSend>()`), `Box<dyn Error>` not being `Error`, `()` not being `Error`, and a join payload (`Box<dyn Any + Send>`) not being `Error` |
 | `E0283` | type annotations needed to pick between two trait impls |
-| `E0308` | mismatched types (variance direction, fn-pointer coercion; two major versions' `Empty`) |
+| `E0308` | mismatched types (variance direction, fn-pointer coercion; two major versions' `Empty`; an `Option` where a `Result<_, ()>` was expected; `Err(())` in a `Result<T, !>`) |
 | `E0381` | use/borrow of a possibly-uninitialized binding |
 | `E0382` | use of moved value (only a *binding* moves — `let _ = x;` does not) |
 | `E0423` | unit-struct constructor removed by a private field (`let _ = Unit;`) |
-| `E0451` | field is private (`UnitWithPrivateField { _private: () }` from another crate) |
+| `E0451` | field is private (`UnitWithPrivateField { _private: () }` from another crate; every field of the opaque `DecodeError`) |
 | `E0499` | two `&mut` at once |
 | `E0502` | shared and mutable borrow overlap |
 | `E0506` | assign to a place while it is borrowed |
 | `E0507` | move out of a `&mut`; also `self.close()` inside `Drop::drop(&mut self)` |
 | `E0509` | move a field out of a type that implements `Drop` |
 | `E0515` | return a reference to a temporary / local |
+| `E0521` | borrowed data escapes: `downcast_ref` behind a `dyn Error` that is not `'static` |
 | `E0532` | tuple pattern against a named struct (`let NamedPoint(x, y) = p;`) |
 | `E0594` | write through a `&` |
 | `E0596` | cannot borrow behind a `&`: `impl Trait for &T` delegating a `&mut self` method |
 | `E0597` | "does not live long enough"; also a missing `for<'a>` bound |
 | `E0599` | no method on this type (typestate: `run` on `SshConnection<Unauthenticated>`, `launch` on `Rocket<Launched>`; `.len()` on a returned `impl AsRef<str>`) |
-| `E0603` | private constructor across a crate boundary (`Slot(0)`); also a `pub(crate)` item imported from outside |
+| `E0603` | private constructor across a crate boundary (`Slot(0)`); also a `pub(crate)` item imported from outside; also the private `Cause` enum inside `DecodeError` |
 | `E0605` | cast `&T` as `&mut T` |
 | `E0616` | field is private (`iter.inner`, which is what makes a newtype's identity the wrapper's) |
 | `E0618` | call syntax on a non-function: a payload passed to a unit variant (`Target::Nowhere("x")`) |

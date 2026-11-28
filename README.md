@@ -53,7 +53,7 @@ This repo is not a reimplementation of the book. It's a scratchpad where each ch
 │           ├── return_position_impl_trait.rs # opaque returns, async fn, zero-cost erasure
 │           ├── argument_position_impl_trait.rs  # sugar for an unnamed generic parameter
 │           └── associated_type_position.rs   # `type IntoIter = impl Iterator<..>`: nightly only
-│   └── designing_interfaces/  # Ch. 3 — Designing Interfaces
+│   ├── designing_interfaces/  # Ch. 3 — Designing Interfaces
 │       ├── mod.rs
 │       ├── unsurprising/      # "Unsurprising"
 │       │   ├── mod.rs
@@ -82,6 +82,13 @@ This repo is not a reimplementation of the book. It's a scratchpad where each ch
 │           ├── reexports.rs   # Listing 3-7; dependency major versions are distinct types, newtype/impl Trait, semver trick
 │           ├── auto_traits.rs # Listing 3-8; is_normal::<T>(), Send/Sync/Unpin/UnwindSafe through impl Trait
 │           └── hidden_items.rs  # #[doc(hidden)]: nameable but not contract; its auto-traits still are
+│   └── error_handling/     # Ch. 4 — Error Handling
+│       ├── mod.rs
+│       └── representing_errors/  # "Representing Errors"
+│           ├── mod.rs
+│           ├── enumeration.rs          # Listing 4-1; CopyError::In/Out, Error/Display/Debug/Send/Sync/'static, map_err not From
+│           ├── opaque_errors.rs        # concrete DecodeError (line/status, private cause), BoxError, downcasting, TypeId, size
+│           └── special_error_cases.rs  # Result<T,()> vs Option, unit struct error, never type, thread::Result
 ├── book/
 │   ├── Rust_for_Rustaceans.md    # local copy of the book text (for reference/grepping)
 │   └── Rust_for_Rustaceans.pdf
@@ -160,7 +167,7 @@ Conventions used here:
 | 1 | Foundations | `src/foundation/` | ✅ *Talking About Memory* · *Ownership* · *Borrowing and Lifetimes* |
 | 2 | Types | `src/types/` | ✅ *Types in Memory* · *Traits and Trait Bounds* · *Existential Types* |
 | 3 | Designing Interfaces | `src/designing_interfaces/` | ✅ *Unsurprising* · *Flexible* · *Obvious* · *Constrained* |
-| 4 | Error Handling | `src/error_handling/` | not started |
+| 4 | Error Handling | `src/error_handling/` | ⏳ *Representing Errors* done · *Propagating Errors* next |
 | 5 | Project Structure | `src/project_structure/` | not started |
 | 6 | Testing | `src/testing/` | not started |
 | 7 | Macros | `src/macros/` | not started |
@@ -171,7 +178,7 @@ Conventions used here:
 | 12 | Rust Without the Standard Library | `src/rust_without_the_standard_library/` | not started |
 | 13 | The Rust Ecosystem | `src/rust_ecosystem/` | not started |
 
-Directories are listed as they will be named when created; `foundation/`, `types/`, and `designing_interfaces/` exist so far. Update the status column as you go: ⏳ in progress, ✅ done, ⏭️ skipped.
+Directories are listed as they will be named when created; `foundation/`, `types/`, `designing_interfaces/`, and `error_handling/` exist so far. Update the status column as you go: ⏳ in progress, ✅ done, ⏭️ skipped.
 
 ## Notes
 
